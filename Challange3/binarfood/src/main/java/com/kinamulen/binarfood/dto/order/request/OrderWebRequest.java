@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class    OrderWebRequest {
+public class OrderWebRequest {
     private List<OrderDetailWebRequest> products;
     private String destinationAddress;
 }

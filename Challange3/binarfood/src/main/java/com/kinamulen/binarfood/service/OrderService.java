@@ -62,6 +62,22 @@ public class OrderService {
         } else return null;
     }
 
+    public OrderWebResponse pay(String username, String password, UUID id) {
+        Optional<User> user = userRepository.findByUsernameAndPassword(username,password);
+        Optional<Order> order = orderRepository.findById(id);
+        if (user.isPresent() && order.isPresent()) {
+            Wallet userWallet = user.get().getUserDetail().getWallet();
+            Double totalCost = order.get().getOrdersDetails().stream().mapToDouble(OrderDetail::getTotalPrice).sum();
+            Boolean isComplete = userWallet.getBalance() >= totalCost;
+
+            if (isComplete) {
+                order.get().setCompleted(true);
+                userWallet.setBalance(userWallet.getBalance() - totalCost);
+            }
+            return toWebResponse(order.get()); //isComplete remain false
+        }else return null;
+    }
+
     private OrderWebResponse toWebResponse(Order order) {
         return OrderWebResponse.builder()
                 .id(order.getId())
@@ -86,20 +102,4 @@ public class OrderService {
         return orderDetailWebResponses;
     }
 
-//    public OrderWebResponse pay(String username, String password, UUID id) {
-//        Optional<User> user = userRepository.findByUsernameAndPassword(username,password);
-//        Optional<Order> order = orderRepository.findById(id);
-//        if (user.isPresent() && order.isPresent()) {
-//            Wallet userWallet = user.get().getUserDetail().getWallet();
-//            Double totalCost = order.get().getOrdersDetails().stream().mapToDouble(OrderDetail::getTotalPrice).sum();
-//            Boolean isComplete = userWallet.getBalance() >= totalCost;
-//
-//            if (isComplete) {
-//                order.get().setCompleted(true);
-//                userWallet.setBalance(userWallet.getBalance() - totalCost);
-//                Wallet merchantWallet =
-//
-//            }
-//        }
-//    }
 }

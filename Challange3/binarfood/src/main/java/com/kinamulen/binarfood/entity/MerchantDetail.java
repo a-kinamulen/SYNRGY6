@@ -1,7 +1,6 @@
 package com.kinamulen.binarfood.entity;
 
 import com.kinamulen.binarfood.enums.MerchantType;
-import com.kinamulen.binarfood.enums.WalletType;
 import jakarta.persistence.*;
 import lombok.*;
 

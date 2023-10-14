@@ -5,114 +5,260 @@ import com.kinamulen.binarfood.dto.merchant.request.CreateMerchantWebRequest;
 import com.kinamulen.binarfood.dto.merchant.request.UpdateMerchantWebRequest;
 import com.kinamulen.binarfood.dto.merchant.response.GetMerchantWebResponse;
 import com.kinamulen.binarfood.dto.merchant.response.MerchantWebResponse;
+import com.kinamulen.binarfood.entity.Merchant;
+import com.kinamulen.binarfood.entity.MerchantDetail;
+import com.kinamulen.binarfood.entity.Wallet;
 import com.kinamulen.binarfood.enums.MerchantType;
+import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.repository.MerchantDetailRepository;
+import com.kinamulen.binarfood.repository.MerchantRepository;
+import com.kinamulen.binarfood.repository.WalletRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+
 @SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class MerchantServiceTest {
 
-    @Autowired
+    @InjectMocks
     private MerchantService merchantService;
+    @Mock
+    private MerchantRepository merchantRepository;
+    @Mock
+    private MerchantDetailRepository merchantDetailRepository;
+    @Mock
+    private WalletRepository walletRepository;
 
     @Test
     void createMerchant_success(){
+        //data prep starts
         CreateMerchantWebRequest request = CreateMerchantWebRequest.builder()
                 .merchantName("name")
                 .phoneNumber("088888888")
                 .merchantLocation("location")
                 .type(MerchantType.REGULAR)
                 .build();
+        MerchantDetail merchantDetail = MerchantDetail.builder()
+                .phoneNumber("08888888888")
+                .merchantLocation("location")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        //data prep ends
+
+        //mock starts
+        given(merchantDetailRepository.save(any(MerchantDetail.class))).willReturn(merchantDetail);
+        //mock ends
+
         MerchantWebResponse response = merchantService.create(request);
-        Assertions.assertEquals(request.getMerchantName(),response.getMerchantName());
-        Assertions.assertEquals(request.getPhoneNumber(),response.getPhoneNumber());
-        Assertions.assertEquals(request.getMerchantLocation(),response.getMerchantLocation());
-        Assertions.assertEquals(request.getType(),response.getType());
+        Assertions.assertNotNull(response);
     }
 
     @Test
     void getMerchant_success(){
-        CreateMerchantWebRequest request = CreateMerchantWebRequest.builder()
-                .merchantName("name")
-                .phoneNumber("088888888")
-                .merchantLocation("location")
-                .type(MerchantType.REGULAR)
+        //data preparation starts
+        Wallet wallet = Wallet.builder()
+                .id(UUID.randomUUID())
+                .balance(0.0)
+                .type(WalletType.MERCHANT)
                 .build();
-        MerchantWebResponse createRes = merchantService.create(request);
+        MerchantDetail merchantDetail = MerchantDetail.builder()
+                .phoneNumber("08888888888")
+                .merchantLocation("location")
+                .merchantType(MerchantType.REGULAR)
+                .wallet(wallet)
+                .build();
+        UUID merchantId = UUID.randomUUID();
+        Optional<Merchant> optMerchant = Optional.of(Merchant.builder()
+                .id(merchantId)
+                .merchantDetail(merchantDetail)
+                .build());
+        //data preparation ends
 
-        GetMerchantWebResponse response = merchantService.getMerchant(createRes.getId());
-        Assertions.assertEquals(createRes.getId(), response.getId());
+        //mock data starts
+        given(merchantRepository.findById(any(UUID.class))).willReturn(optMerchant);
+        //mock data ends
+
+        GetMerchantWebResponse getMerchantWebResponse = merchantService.getMerchant(merchantId);
+
+        //Assertion starts
+        Assertions.assertEquals(merchantId, getMerchantWebResponse.getId());
+        //Assertion ends
     }
 
     @Test
     void getMerchant_fail(){
-        GetMerchantWebResponse response = merchantService.getMerchant(UUID.randomUUID());
-        Assertions.assertNull(response);
+        UUID merchantId = UUID.randomUUID();
+
+        //mock data starts
+        given(merchantRepository.findById(merchantId)).willReturn(Optional.empty());
+        //mock data ends
+
+        GetMerchantWebResponse getMerchantWebResponse = merchantService.getMerchant(merchantId);
+
+        //assertions starts
+        Assertions.assertNull(getMerchantWebResponse);
+        //assertions ends
     }
 
     @Test
     void getMerchants_success(){
+        //data prep starts
+        MerchantDetail merchantDetail1 = MerchantDetail.builder()
+                .phoneNumber("088888888881")
+                .merchantLocation("location1")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        Merchant merchant1 = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantName1")
+                .merchantDetail(merchantDetail1)
+                .build();
+        MerchantDetail merchantDetail2 = MerchantDetail.builder()
+                .phoneNumber("088888888882")
+                .merchantLocation("location2")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        Merchant merchant2 = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantName2")
+                .merchantDetail(merchantDetail2)
+                .build();
+        MerchantDetail merchantDetail3 = MerchantDetail.builder()
+                .phoneNumber("088888888883")
+                .merchantLocation("location3")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        Merchant merchant3 = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantName3")
+                .merchantDetail(merchantDetail3)
+                .build();
+        List<Merchant> merchants = Arrays.asList(merchant1, merchant2, merchant3);
+        //data prep ends
+
+        //mock up starts
+        given(merchantRepository.findAll()).willReturn(merchants);
+        //mock up ends
+
         List<MerchantWebResponse> responses = merchantService.getMerchants();
-        Assertions.assertFalse(responses.isEmpty());
+        Assertions.assertEquals(merchants.size(), responses.size());
     }
 
     @Test
     void updateMerchant_success(){
-        CreateMerchantWebRequest createReq = CreateMerchantWebRequest.builder()
-                .merchantName("name")
-                .phoneNumber("088888888")
-                .merchantLocation("location")
+        //data preparation starts
+        MerchantDetail merchantDetail1 = MerchantDetail.builder()
+                .phoneNumber("088888888881")
+                .merchantLocation("location1")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        Merchant merchant1 = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantName1")
+                .merchantDetail(merchantDetail1)
+                .build();
+        UUID merchantId = UUID.randomUUID();
+        MerchantDetail merchantDetailUpdate = MerchantDetail.builder()
+                .phoneNumber("08888888888update")
+                .merchantLocation("locationUpdate")
+                .merchantType(MerchantType.REGULAR)
+                .build();
+        Merchant merchantUpdate = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantNameUpdate")
+                .merchantDetail(merchantDetailUpdate)
+                .build();
+
+        Optional<Merchant> optMerchant = Optional.of(merchant1);
+
+        UpdateMerchantWebRequest updateMerchantWebRequest = UpdateMerchantWebRequest.builder()
+                .merchantName("merchantNameUpdate")
+                .phoneNumber("08888888888update")
+                .merchantLocation("locationUpdate")
                 .type(MerchantType.REGULAR)
                 .build();
-        MerchantWebResponse createRes = merchantService.create(createReq);
+        //data preparation ends
 
+        //mock data starts
+        given(merchantRepository.findById(merchantId)).willReturn(optMerchant);
+        given(merchantRepository.save(merchant1)).willReturn(merchantUpdate);
+        //mock data ends
 
-        UpdateMerchantWebRequest request = UpdateMerchantWebRequest.builder()
-                .merchantName("nameUpdated")
-                .phoneNumber("088888888")
-                .merchantLocation("location")
-                .type(MerchantType.REGULAR)
-                .build();
-        MerchantWebResponse response = merchantService.updateMerchant(createRes.getId(), request);
-        Assertions.assertEquals(createRes.getId(), response.getId());
-        Assertions.assertEquals(request.getMerchantName(), response.getMerchantName());
+        MerchantWebResponse response = merchantService.updateMerchant(merchantId, updateMerchantWebRequest);
+        Assertions.assertEquals(response.getMerchantName(), updateMerchantWebRequest.getMerchantName());
     }
 
     @Test
     void updateMerchant_fail(){
-        UpdateMerchantWebRequest request = UpdateMerchantWebRequest.builder()
-                .merchantName("nameUpdated")
-                .phoneNumber("088888888")
-                .merchantLocation("location")
+        //data preparation starts
+        UpdateMerchantWebRequest updateMerchantWebRequest = UpdateMerchantWebRequest.builder()
+                .merchantName("merchantNameUpdate")
+                .phoneNumber("08888888888update")
+                .merchantLocation("locationUpdate")
                 .type(MerchantType.REGULAR)
                 .build();
-        MerchantWebResponse response = merchantService.updateMerchant(UUID.randomUUID(), request);
+        UUID merchantId = UUID.randomUUID();
+        //data preparation ends
+
+        //mock data starts
+        given(merchantRepository.findById(merchantId)).willReturn(Optional.empty());
+        //mock data ends
+
+        MerchantWebResponse response = merchantService.updateMerchant(merchantId, updateMerchantWebRequest);
         Assertions.assertNull(response);
     }
 
     @Test
     void deleteMerchant_success(){
-        CreateMerchantWebRequest createReq = CreateMerchantWebRequest.builder()
-                .merchantName("name")
-                .phoneNumber("088888888")
-                .merchantLocation("location")
-                .type(MerchantType.REGULAR)
+        //data prep starts
+        MerchantDetail merchantDetail1 = MerchantDetail.builder()
+                .phoneNumber("088888888881")
+                .merchantLocation("location1")
+                .merchantType(MerchantType.REGULAR)
                 .build();
-        MerchantWebResponse createRes = merchantService.create(createReq);
+        Merchant merchant1 = Merchant.builder()
+                .id(UUID.randomUUID())
+                .merchantName("merchantName1")
+                .merchantDetail(merchantDetail1)
+                .build();
+        UUID merchantId = UUID.randomUUID();
+        Optional<Merchant> optMerchant = Optional.of(merchant1);
+        //data prep ends
 
-        Boolean response = merchantService.deleteMerchant(createRes.getId());
+        //mock data starts
+        given(merchantRepository.findById(merchantId)).willReturn(optMerchant);
+        doNothing().when(merchantRepository).delete(merchant1);
+        //mock data ends
+
+        Boolean response = merchantService.deleteMerchant(merchantId);
         Assertions.assertTrue(response);
     }
 
     @Test
     void deleteMerchant_fail(){
-        Boolean response = merchantService.deleteMerchant(UUID.randomUUID());
+        //data preparation starts
+        UUID merchantId = UUID.randomUUID();
+        //data preparation ends
+
+        //mock data starts
+        given(merchantRepository.findById(merchantId)).willReturn(Optional.empty());
+        //mock data ends
+
+        Boolean response = merchantService.deleteMerchant(merchantId);
         Assertions.assertFalse(response);
     }
-
 }

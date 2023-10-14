@@ -2,8 +2,6 @@ package com.kinamulen.binarfood.service;
 
 import com.kinamulen.binarfood.dto.product.request.ProductWebRequest;
 import com.kinamulen.binarfood.dto.product.response.ProductWebResponse;
-import com.kinamulen.binarfood.dto.wallet.request.WalletWebRequest;
-import com.kinamulen.binarfood.dto.wallet.response.WalletWebResponse;
 import com.kinamulen.binarfood.entity.Merchant;
 import com.kinamulen.binarfood.entity.Product;
 import com.kinamulen.binarfood.repository.MerchantRepository;

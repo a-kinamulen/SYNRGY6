@@ -1,6 +1,5 @@
 package com.kinamulen.binarfood.dto.order.response;
 
-import com.kinamulen.binarfood.entity.OrderDetail;
 import lombok.*;
 
 import java.time.LocalDateTime;

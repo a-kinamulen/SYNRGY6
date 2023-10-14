@@ -2,10 +2,6 @@ package com.kinamulen.binarfood.controller;
 
 import com.kinamulen.binarfood.dto.product.request.ProductWebRequest;
 import com.kinamulen.binarfood.dto.product.response.ProductWebResponse;
-import com.kinamulen.binarfood.dto.user.request.RegisterUserWebRequest;
-import com.kinamulen.binarfood.dto.user.response.UserWebResponse;
-import com.kinamulen.binarfood.entity.Merchant;
-import com.kinamulen.binarfood.entity.OrderDetail;
 import com.kinamulen.binarfood.service.MerchantService;
 import com.kinamulen.binarfood.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;

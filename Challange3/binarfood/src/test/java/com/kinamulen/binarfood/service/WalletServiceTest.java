@@ -1,11 +1,8 @@
 package com.kinamulen.binarfood.service;
 
-import com.kinamulen.binarfood.dto.merchant.request.CreateMerchantWebRequest;
-import com.kinamulen.binarfood.dto.merchant.response.MerchantWebResponse;
 import com.kinamulen.binarfood.dto.wallet.request.WalletWebRequest;
 import com.kinamulen.binarfood.dto.wallet.response.WalletWebResponse;
 import com.kinamulen.binarfood.entity.Wallet;
-import com.kinamulen.binarfood.enums.MerchantType;
 import com.kinamulen.binarfood.repository.WalletRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

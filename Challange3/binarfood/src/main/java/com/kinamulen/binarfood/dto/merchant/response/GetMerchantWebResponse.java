@@ -1,7 +1,6 @@
 package com.kinamulen.binarfood.dto.merchant.response;
 
 import com.kinamulen.binarfood.dto.wallet.response.WalletWebResponse;
-import com.kinamulen.binarfood.entity.Wallet;
 import com.kinamulen.binarfood.enums.MerchantType;
 import lombok.*;
 
