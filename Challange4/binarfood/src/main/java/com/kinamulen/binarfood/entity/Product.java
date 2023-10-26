@@ -2,7 +2,10 @@ package com.kinamulen.binarfood.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -10,14 +13,12 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
+@SQLDelete(sql = "UPDATE products SET is_deleted = true, deleted_at = now() WHERE id=?")
+@Where(clause = "is_deleted=false")
 @Table(name = "products")
-public class Product {
+public class Product extends AuditModel{
 
-    @Id //ini menjadikannya primary key
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
     private String productName;
     private Double price;
 
@@ -28,4 +29,15 @@ public class Product {
 
     @OneToMany(mappedBy="product", cascade = CascadeType.ALL) //mappedBy nya nembak di OrderDetail
     private Set<OrderDetail> ordersDetails;
+
+    @Builder
+    public Product(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
+                   String productName, Double price,
+                   Merchant merchant, Set<OrderDetail> ordersDetails) {
+        super(id, isDeleted, createdAt, updatedAt, deletedAt);
+        this.productName = productName;
+        this.price = price;
+        this.merchant = merchant;
+        this.ordersDetails = ordersDetails;
+    }
 }

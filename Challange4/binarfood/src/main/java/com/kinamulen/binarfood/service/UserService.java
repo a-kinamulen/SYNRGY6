@@ -1,26 +1,28 @@
 package com.kinamulen.binarfood.service;
 
+import com.kinamulen.binarfood.dto.order.response.OrderWebResponse;
 import com.kinamulen.binarfood.dto.user.request.RegisterUserWebRequest;
 import com.kinamulen.binarfood.dto.user.request.UpdateUserWebRequest;
 import com.kinamulen.binarfood.dto.user.response.GetUserWebResponse;
 import com.kinamulen.binarfood.dto.user.response.UserWebResponse;
 import com.kinamulen.binarfood.dto.wallet.response.WalletWebResponse;
-import com.kinamulen.binarfood.entity.User;
-import com.kinamulen.binarfood.entity.UserDetail;
-import com.kinamulen.binarfood.entity.Wallet;
+import com.kinamulen.binarfood.entity.*;
 import com.kinamulen.binarfood.enums.WalletType;
 import com.kinamulen.binarfood.repository.UserDetailRepository;
 import com.kinamulen.binarfood.repository.UserRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
+@Slf4j
 public class UserService {
 
     @Autowired
@@ -51,12 +53,15 @@ public class UserService {
         user.setUserDetail(userDetail);
         wallet.setUserDetail(userDetail);
         userDetail = userDetailRepository.save(userDetail);
+        log.info("User CREATED: id {}, userDetailId {}, walletId {}"
+                , user.getId(), userDetail.getId(), wallet.getId());
         return toWebResponse(user,userDetail);
     }
 
-    public List<UserWebResponse> getUsers() {
-        List<User> users = userRepository.findAll();
-        return toWebResponseList(users);
+    public List<UserWebResponse> getUsers(Integer page, Integer size, String sortBy, String direction) {
+        Pageable pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
+        Page<User> users = userRepository.findAll(pageRequest);
+        return toWebResponseList(users.toList());
     }
 
     public GetUserWebResponse getUser(UUID id) {
@@ -73,32 +78,48 @@ public class UserService {
             user.get().getUserDetail().setPhoneNumber(updateUserWebRequest.getPhoneNumber());
 
             User updatedUser = userRepository.save(user.get());
+            log.info("User UPDATED: id {}, username {}"
+                    , user.get().getId(), user.get().getUsername());
             return toWebResponse(updatedUser, updatedUser.getUserDetail());
-        } else return null;
+        } else {
+            log.error("Update FAILED, user with id {} not found", id);
+            return null;
+        }
     }
 
     public Boolean deleteUser(UUID id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
             userRepository.delete(user.get());
+            log.info("DELETED user: username {}, id {}"
+                    , user.get().getUsername(), id);
             return true;
-        } else return false;
+        } else {
+            log.error("Delete FAILED, user with id {} not found", id);
+            return false;
+        }
     }
 
     private GetUserWebResponse toWebResponse(Optional<User> user) {
         if (user.isPresent()) {
-            return toWebResponse(user.get(), user.get().getUserDetail(), user.get().getUserDetail().getWallet());
+            return toWebResponse(user.get(), user.get().getUserDetail(), user.get().getUserDetail().getWallet(),
+                    user.get().getOrders().stream().toList());
         }
         return null;
     }
 
-    private GetUserWebResponse toWebResponse(User user, UserDetail userDetail, Wallet wallet) {
+    private GetUserWebResponse toWebResponse(User user, UserDetail userDetail, Wallet wallet, List<Order> orders) {
         return GetUserWebResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .phoneNumber(userDetail.getPhoneNumber())
                 .emailAddress(userDetail.getEmailAddress())
+                .isDeleted(user.isDeleted())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .deletedAt(user.getDeletedAt())
                 .walletWebResponse(toWalletWebResponse(wallet))
+                .orderWebResponses(toOrderWebResponseList(orders))
                 .build();
     }
 
@@ -107,7 +128,28 @@ public class UserService {
                 .id(wallet.getId())
                 .balance(wallet.getBalance())
                 .type(wallet.getType())
+                .isDeleted(wallet.isDeleted())
+                .createdAt(wallet.getCreatedAt())
+                .updatedAt(wallet.getUpdatedAt())
+                .deletedAt(wallet.getDeletedAt())
                 .build();
+    }
+
+    private List<OrderWebResponse> toOrderWebResponseList(List<Order> orders) {
+        List<OrderWebResponse> responses = new ArrayList<>();
+        orders.forEach(order -> responses.add(
+                OrderWebResponse.builder()
+                        .id(order.getId())
+                        .orderTime(order.getOrderTime())
+                        .destinationAddress(order.getDestinationAddress())
+                        .completed(order.getCompleted())
+                        .totalPrice(order.getOrdersDetails().stream().mapToDouble(OrderDetail::getTotalPrice).sum())
+                        .isDeleted(order.isDeleted())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .deletedAt(order.getDeletedAt())
+                .build()));
+        return responses;
     }
 
     private UserWebResponse toWebResponse(User user, UserDetail userDetail) {
@@ -116,6 +158,10 @@ public class UserService {
                 .username(user.getUsername())
                 .phoneNumber(userDetail.getPhoneNumber())
                 .emailAddress(userDetail.getEmailAddress())
+                .isDeleted(user.isDeleted())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .deletedAt(user.getDeletedAt())
                 .build();
     }
 

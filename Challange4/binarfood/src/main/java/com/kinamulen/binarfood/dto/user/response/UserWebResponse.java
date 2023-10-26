@@ -2,6 +2,7 @@ package com.kinamulen.binarfood.dto.user.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Setter
@@ -14,4 +15,8 @@ public class UserWebResponse {
     private String username;
     private String phoneNumber;
     private String emailAddress;
+    private Boolean isDeleted;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 }

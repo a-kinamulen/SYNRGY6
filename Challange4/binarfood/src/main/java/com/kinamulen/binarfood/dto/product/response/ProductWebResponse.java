@@ -2,6 +2,7 @@ package com.kinamulen.binarfood.dto.product.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Setter
@@ -14,4 +15,8 @@ public class ProductWebResponse {
     private String productName;
     private Double price;
     private String merchantName;
+    private Boolean isDeleted;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 }

@@ -2,7 +2,10 @@ package com.kinamulen.binarfood.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -10,14 +13,11 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
+@SQLDelete(sql = "UPDATE users SET is_deleted = true, deleted_at = now() WHERE id=?")
+@Where(clause = "is_deleted=false")
 @Table(name = "users")
-public class User {
-
-    @Id //ini menjadikannya primary key
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class User extends AuditModel{
 
     @Column(length = 20)
     private String username;
@@ -28,4 +28,15 @@ public class User {
 
     @OneToOne(mappedBy = "user", optional = false, cascade = CascadeType.ALL)
     private UserDetail userDetail;
+
+    @Builder
+    public User(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
+                String username, String password,
+                Set<Order> orders, UserDetail userDetail) {
+        super(id, isDeleted, createdAt, updatedAt, deletedAt);
+        this.username = username;
+        this.password = password;
+        this.orders = orders;
+        this.userDetail = userDetail;
+    }
 }

@@ -1,5 +1,6 @@
 package com.kinamulen.binarfood.dto.order.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,11 @@ public class OrderWebResponse {
     private LocalDateTime orderTime;
     private String destinationAddress;
     private Boolean completed;
-    private Double totalPrice; //sum of OrderDetailWebResponse.totalPrice
-
+    private Double totalPrice; //sum of OrderDetail.totalPrice
+    private Boolean isDeleted;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<OrderDetailWebResponse> orderDetailWebResponses;
 }

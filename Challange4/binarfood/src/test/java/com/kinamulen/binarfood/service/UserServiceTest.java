@@ -145,7 +145,7 @@ class UserServiceTest {
         given(userRepository.findAll()).willReturn(users);
         //mock ends here
 
-        List<UserWebResponse> responses = userService.getUsers();
+        List<UserWebResponse> responses = userService.getUsers(0,2,"id","ASC");
         Assertions.assertEquals(users.size(), responses.size());
     }
 

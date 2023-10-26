@@ -154,7 +154,7 @@ class MerchantServiceTest {
         given(merchantRepository.findAll()).willReturn(merchants);
         //mock up ends
 
-        List<MerchantWebResponse> responses = merchantService.getMerchants();
+        List<MerchantWebResponse> responses = merchantService.getMerchants(1,2,"id","ASC");
         Assertions.assertEquals(merchants.size(), responses.size());
     }
 

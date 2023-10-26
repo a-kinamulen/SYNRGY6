@@ -4,6 +4,7 @@ import com.kinamulen.binarfood.dto.product.request.ProductWebRequest;
 import com.kinamulen.binarfood.dto.product.response.ProductWebResponse;
 import com.kinamulen.binarfood.service.MerchantService;
 import com.kinamulen.binarfood.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/product")
+@Slf4j
 public class ProductController {
 
     @Autowired
@@ -24,11 +26,20 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductWebResponse> create(@RequestHeader("merchant_name") String merchantName,
                                                      @RequestBody ProductWebRequest request){
+        log.info("Starting product creation, name: {}, on merchant: {}"
+                , request.getProductName(), merchantName);
         ProductWebResponse response = productService.create(merchantName, request);
         if (Objects.nonNull(response)) {
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    //Only get products from open merchant
+    @GetMapping
+    public ResponseEntity<List<ProductWebResponse>> getProducts() {
+        List<ProductWebResponse> responses = productService.getProducts();
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/merchant/{merchantId}")

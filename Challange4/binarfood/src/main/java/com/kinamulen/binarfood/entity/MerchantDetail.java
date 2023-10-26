@@ -3,21 +3,22 @@ package com.kinamulen.binarfood.entity;
 import com.kinamulen.binarfood.enums.MerchantType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
+@SQLDelete(sql = "UPDATE merchant_details SET is_deleted = true, deleted_at = now() WHERE id=?")
+@Where(clause = "is_deleted=false")
 @Table(name = "merchant_details")
-public class MerchantDetail {
+public class MerchantDetail extends AuditModel{
 
-    @Id //ini menjadikannya primary key
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
     private String phoneNumber;
     private String merchantLocation;
 
@@ -31,4 +32,16 @@ public class MerchantDetail {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "wallet_id", nullable=false)
     private Wallet wallet;
+
+    @Builder
+    public MerchantDetail(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
+                          String phoneNumber, String merchantLocation,
+                          MerchantType merchantType, Merchant merchant, Wallet wallet) {
+        super(id, isDeleted, createdAt, updatedAt, deletedAt);
+        this.phoneNumber = phoneNumber;
+        this.merchantLocation = merchantLocation;
+        this.merchantType = merchantType;
+        this.merchant = merchant;
+        this.wallet = wallet;
+    }
 }

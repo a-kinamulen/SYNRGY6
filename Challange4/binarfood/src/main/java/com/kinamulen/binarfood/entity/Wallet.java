@@ -3,21 +3,21 @@ package com.kinamulen.binarfood.entity;
 import com.kinamulen.binarfood.enums.WalletType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
+@SQLDelete(sql = "UPDATE wallets SET is_deleted = true, deleted_at = now() WHERE id=?")
+@Where(clause = "is_deleted=false")
 @Table(name = "wallets")
-public class Wallet {
-
-    @Id //ini menjadikannya primary key
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Wallet extends AuditModel{
 
     private Double balance;
     @Enumerated(EnumType.STRING)
@@ -28,4 +28,15 @@ public class Wallet {
 
     @OneToOne(mappedBy = "wallet", cascade = CascadeType.ALL)
     private MerchantDetail merchantDetail;
+
+    @Builder
+    public Wallet(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
+                  Double balance, WalletType type,
+                  UserDetail userDetail, MerchantDetail merchantDetail) {
+        super(id, isDeleted, createdAt, updatedAt, deletedAt);
+        this.balance = balance;
+        this.type = type;
+        this.userDetail = userDetail;
+        this.merchantDetail = merchantDetail;
+    }
 }

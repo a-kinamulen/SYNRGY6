@@ -6,6 +6,7 @@ import com.kinamulen.binarfood.entity.Wallet;
 import com.kinamulen.binarfood.repository.MerchantDetailRepository;
 import com.kinamulen.binarfood.repository.UserDetailRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class WalletService {
 
     @Autowired
@@ -27,15 +29,23 @@ public class WalletService {
         if (wallet.isPresent()) {
             wallet.get().setBalance(wallet.get().getBalance() + request.getAmount());
             Wallet updatedWallet = walletRepository.save(wallet.get());
+            log.info("Top up success to wallet {} amount {}", id, request.getAmount());
             return toWebResponse(updatedWallet);
-        } else return null;
+        } else {
+            log.error("Top up failed, wallet id not found. id: {}", id);
+            return null;
+        }
     }
 
-    private WalletWebResponse toWebResponse(Wallet updatedWallet) {
+    private WalletWebResponse toWebResponse(Wallet wallet) {
         return WalletWebResponse.builder()
-                .id(updatedWallet.getId())
-                .balance(updatedWallet.getBalance())
-                .type(updatedWallet.getType())
+                .id(wallet.getId())
+                .balance(wallet.getBalance())
+                .type(wallet.getType())
+                .isDeleted(wallet.isDeleted())
+                .createdAt(wallet.getCreatedAt())
+                .updatedAt(wallet.getUpdatedAt())
+                .deletedAt(wallet.getDeletedAt())
                 .build();
     }
 }
