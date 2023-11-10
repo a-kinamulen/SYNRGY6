@@ -1,15 +1,24 @@
 package com.kinamulen.binarfood.controller;
 
 import com.kinamulen.binarfood.dto.merchant.request.CreateMerchantWebRequest;
+import com.kinamulen.binarfood.dto.merchant.request.MerchantReportWebRequest;
 import com.kinamulen.binarfood.dto.merchant.request.UpdateMerchantWebRequest;
 import com.kinamulen.binarfood.dto.merchant.response.GetMerchantWebResponse;
 import com.kinamulen.binarfood.dto.merchant.response.MerchantWebResponse;
+import com.kinamulen.binarfood.service.InvoiceService;
 import com.kinamulen.binarfood.service.MerchantService;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -21,6 +30,8 @@ public class MerchantController {
 
     @Autowired
     private MerchantService merchantService;
+    @Autowired
+    private InvoiceService invoiceService;
 
     @PostMapping
     public ResponseEntity<MerchantWebResponse> create(@RequestBody CreateMerchantWebRequest request){
@@ -74,5 +85,22 @@ public class MerchantController {
             return ResponseEntity.ok(true);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/report")
+    public ResponseEntity<Resource> getMerchantReport(@PathVariable UUID id,
+                                                      @RequestBody MerchantReportWebRequest request)
+            throws JRException, IOException {
+
+        byte[] reportContent = invoiceService.genereteReport(id, request.getStartDate(), request.getEndDate());
+        ByteArrayResource resource = new ByteArrayResource(reportContent);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(resource.contentLength())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("report.pdf")
+                                .build().toString())
+                .body(resource);
     }
 }

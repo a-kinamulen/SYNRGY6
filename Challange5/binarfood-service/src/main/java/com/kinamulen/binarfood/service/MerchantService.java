@@ -1,5 +1,8 @@
 package com.kinamulen.binarfood.service;
 
+import com.kinamulen.binarfood.adapter.SecurityServiceAdapter;
+import com.kinamulen.binarfood.adapter.request.CreateUserCredentialWebRequest;
+import com.kinamulen.binarfood.adapter.response.CreateUserCredentialWebResponse;
 import com.kinamulen.binarfood.dto.merchant.request.CreateMerchantWebRequest;
 import com.kinamulen.binarfood.dto.merchant.request.UpdateMerchantWebRequest;
 import com.kinamulen.binarfood.dto.merchant.response.GetMerchantWebResponse;
@@ -37,6 +40,8 @@ public class MerchantService {
     private MerchantDetailRepository merchantDetailRepository;
     @Autowired
     private WalletRepository walletRepository;
+    @Autowired
+    private SecurityServiceAdapter securityServiceAdapter;
 
     public MerchantWebResponse create(CreateMerchantWebRequest request) {
         Merchant merchant = Merchant.builder()
@@ -60,9 +65,14 @@ public class MerchantService {
         merchant.setMerchantDetail(merchantDetail);
         wallet.setMerchantDetail(merchantDetail);
         merchantDetail = merchantDetailRepository.save(merchantDetail);
-        log.info("Merchant CREATED: id {}, merchantDetailId {}, walletId {}"
-                , merchant.getId(), merchantDetail.getId(), wallet.getId());
-        return toWebResponse(merchant, merchantDetail);
+        //REST call to security service
+        CreateUserCredentialWebResponse response = securityServiceAdapter.addNewUser(CreateUserCredentialWebRequest.builder()
+                .username(merchant.getMerchantName())
+                .binarfoodId(merchant.getId())
+                .build());
+        log.info("Merchant CREATED: id {}, merchantDetailId {}, walletId {}, token {}"
+                , merchant.getId(), merchantDetail.getId(), wallet.getId(), response.getToken());
+        return toWebResponse(response.getToken(), merchant, merchantDetail);
     }
 
     public List<MerchantWebResponse> getMerchants(Integer page, Integer size, String sortBy, String direction) {
@@ -119,6 +129,22 @@ public class MerchantService {
             responses.add(toWebResponse(merchant, merchant.getMerchantDetail()));
         });
         return responses;
+    }
+
+    private MerchantWebResponse toWebResponse(String token, Merchant merchant, MerchantDetail merchantDetail) {
+        return MerchantWebResponse.builder()
+                .token(token)
+                .id(merchant.getId())
+                .merchantName(merchant.getMerchantName())
+                .open(merchant.getOpen())
+                .phoneNumber(merchantDetail.getPhoneNumber())
+                .merchantLocation(merchantDetail.getMerchantLocation())
+                .type(merchantDetail.getMerchantType())
+                .isDeleted(merchant.isDeleted())
+                .createdAt(merchant.getCreatedAt())
+                .updatedAt(merchant.getUpdatedAt())
+                .deletedAt(merchant.getDeletedAt())
+                .build();
     }
 
     private MerchantWebResponse toWebResponse(Merchant merchant, MerchantDetail merchantDetail) {

@@ -19,7 +19,7 @@ import java.util.UUID;
 @Table(name = "users")
 public class User extends AuditModel{
 
-    @Column(length = 20)
+    @Column(length = 20, nullable = false, unique = true)
     private String username;
     private String password;
 

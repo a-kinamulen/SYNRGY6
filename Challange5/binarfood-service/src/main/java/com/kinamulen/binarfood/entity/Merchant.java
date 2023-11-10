@@ -19,7 +19,7 @@ import java.util.UUID;
 @Table(name = "merchants")
 public class Merchant extends AuditModel {
 
-    @Column(length = 30) //bisa jadi layer terakhir validasi [bad practice]
+    @Column(length = 30, unique = true) //bisa jadi layer terakhir validasi [bad practice]
     private String merchantName;
     private Boolean open;
 

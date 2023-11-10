@@ -11,6 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserWebResponse {
+    private String token;
     private UUID id;
     private String username;
     private String phoneNumber;

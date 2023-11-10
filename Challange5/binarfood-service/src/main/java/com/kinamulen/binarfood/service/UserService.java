@@ -1,5 +1,8 @@
 package com.kinamulen.binarfood.service;
 
+import com.kinamulen.binarfood.adapter.SecurityServiceAdapter;
+import com.kinamulen.binarfood.adapter.request.CreateUserCredentialWebRequest;
+import com.kinamulen.binarfood.adapter.response.CreateUserCredentialWebResponse;
 import com.kinamulen.binarfood.dto.order.response.OrderWebResponse;
 import com.kinamulen.binarfood.dto.user.request.RegisterUserWebRequest;
 import com.kinamulen.binarfood.dto.user.request.UpdateUserWebRequest;
@@ -31,6 +34,8 @@ public class UserService {
     private WalletRepository walletRepository;
     @Autowired
     private UserDetailRepository userDetailRepository;
+    @Autowired
+    private SecurityServiceAdapter securityServiceAdapter;
 
     public UserWebResponse register(RegisterUserWebRequest request) {
         User user = User.builder()
@@ -53,9 +58,15 @@ public class UserService {
         user.setUserDetail(userDetail);
         wallet.setUserDetail(userDetail);
         userDetail = userDetailRepository.save(userDetail);
-        log.info("User CREATED: id {}, userDetailId {}, walletId {}"
-                , user.getId(), userDetail.getId(), wallet.getId());
-        return toWebResponse(user,userDetail);
+        //REST call to security service
+        CreateUserCredentialWebResponse response = securityServiceAdapter.addNewUser(CreateUserCredentialWebRequest.builder()
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .binarfoodId(user.getId())
+                .build());
+        log.info("User CREATED: id {}, userDetailId {}, walletId {}, token {}"
+                , user.getId(), userDetail.getId(), wallet.getId(), response.getToken());
+        return toWebResponse(response.getToken(),user,userDetail);
     }
 
     public List<UserWebResponse> getUsers(Integer page, Integer size, String sortBy, String direction) {
@@ -150,6 +161,20 @@ public class UserService {
                         .deletedAt(order.getDeletedAt())
                 .build()));
         return responses;
+    }
+
+    private UserWebResponse toWebResponse(String token, User user, UserDetail userDetail) {
+        return UserWebResponse.builder()
+                .token(token)
+                .id(user.getId())
+                .username(user.getUsername())
+                .phoneNumber(userDetail.getPhoneNumber())
+                .emailAddress(userDetail.getEmailAddress())
+                .isDeleted(user.isDeleted())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .deletedAt(user.getDeletedAt())
+                .build();
     }
 
     private UserWebResponse toWebResponse(User user, UserDetail userDetail) {

@@ -12,6 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class MerchantWebResponse {
+    private String token;
     private UUID id;
     private String merchantName;
     private Boolean open;
