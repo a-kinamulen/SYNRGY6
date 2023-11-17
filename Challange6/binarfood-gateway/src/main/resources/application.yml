@@ -1,0 +1,29 @@
+server:
+  port: 8989
+
+spring:
+  application:
+    name: BINARFOOD-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: binarfood-service
+          uri: lb://BINARFOOD-SERVICE
+          predicates:
+            - Path=/binarfood/**
+          filters:
+            - AuthenticationFilter
+
+        - id: security-service
+          uri: lb://SECURITY-SERVICE
+          predicates:
+            - Path=/auth/**
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    instance:
+      hostname: localhost
