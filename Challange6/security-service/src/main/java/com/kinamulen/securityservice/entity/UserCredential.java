@@ -1,5 +1,6 @@
 package com.kinamulen.securityservice.entity;
 
+import com.kinamulen.securityservice.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,4 +23,6 @@ public class UserCredential {
     private String password;
     @Column(nullable = false)
     private UUID binarfoodId;
+    @Enumerated(EnumType.STRING)
+    private UserType type;
 }

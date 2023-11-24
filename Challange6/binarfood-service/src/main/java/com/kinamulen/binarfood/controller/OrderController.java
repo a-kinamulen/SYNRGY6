@@ -7,6 +7,7 @@ import com.kinamulen.binarfood.service.InvoiceService;
 import com.kinamulen.binarfood.service.JasperReportService;
 import com.kinamulen.binarfood.service.OrderService;
 import com.kinamulen.binarfood.service.UserService;
+import com.kinamulen.binarfood.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,24 +31,30 @@ public class OrderController {
     private OrderService orderService;
     @Autowired
     private InvoiceService invoiceService;
+    @Autowired
+    private SecurityUtil securityUtil;
 
-
-    @PostMapping
+    @PostMapping("/_user-secured")
     public ResponseEntity<OrderWebResponse> create(
-            @RequestHeader("username") String username,
-            @RequestHeader("password") String password,
-            @RequestBody OrderWebRequest request){
-        log.info("Starting create order for user {}", username);
-        OrderWebResponse response = orderService.create(username, password, request);
+            @RequestBody OrderWebRequest request,
+            @RequestHeader(value = "userId") String idFromToken){
+        log.info("Starting create order for user {}", idFromToken);
+        OrderWebResponse response = orderService.create(request, idFromToken);
         if (Objects.nonNull(response)) {
+
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.notFound().build();
     }
 
-    //getOrder
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderWebResponse> getOrder(@PathVariable UUID id) {
+    //getOrderbyId
+    @GetMapping(value = "/{id}/_user-secured", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OrderWebResponse> getOrder(
+            @PathVariable UUID id,
+            @RequestHeader(value = "userId") String idFromToken) {
+        if (Boolean.FALSE.equals(securityUtil.authorizeOrderToUserId(id, idFromToken))){
+            return ResponseEntity.badRequest().build();
+        }
         OrderWebResponse response = orderService.getOrder(id);
         if (Objects.nonNull(response)) {
             return ResponseEntity.ok(response);
@@ -55,14 +62,16 @@ public class OrderController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/pay")
+    @PostMapping("/{id}/pay/_user-secured")
     public ResponseEntity<OrderWebResponse> pay(
-            @RequestHeader("username") String username,
-            @RequestHeader("password") String password,
-            @PathVariable UUID id){
-        log.info("Starting pay order for user {}, with order id {}", username, id);
-        OrderWebResponse response = orderService.pay(username, password, id);
-        if (response.getCompleted()) {
+            @PathVariable UUID id,
+            @RequestHeader(value = "userId") String idFromToken){
+        log.info("Starting pay order for user {}, with order id {}", idFromToken, id);
+        if (Boolean.FALSE.equals(securityUtil.authorizeOrderToUserId(id, idFromToken))){
+            return ResponseEntity.badRequest().build();
+        }
+        OrderWebResponse response = orderService.pay(id, idFromToken);
+        if (Boolean.TRUE.equals(response.getCompleted())) {
             return ResponseEntity.ok(response);
         } else return ResponseEntity.badRequest().build();
     }
@@ -77,10 +86,14 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{orderId}/invoice")
-    public ResponseEntity<Resource> getItemReport(@PathVariable UUID orderId)
+    @PostMapping("/{orderId}/invoice/_user-secured")
+    public ResponseEntity<Resource> getItemReport(@PathVariable UUID orderId,
+                                                  @RequestHeader(value = "userId") String idFromToken)
             throws JRException, IOException {
 
+        if (Boolean.FALSE.equals(securityUtil.authorizeOrderToUserId(orderId, idFromToken))){
+            return ResponseEntity.badRequest().build();
+        }
         byte[] reportContent = invoiceService.generateInvoice(orderId);
         ByteArrayResource resource = new ByteArrayResource(reportContent);
         return ResponseEntity.ok()

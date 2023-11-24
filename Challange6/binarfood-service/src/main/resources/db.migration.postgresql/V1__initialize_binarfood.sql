@@ -7,6 +7,7 @@
 CREATE table if not exists public.merchants (
 	id uuid NOT NULL,
 	merchant_name varchar(30) NULL,
+	"password" varchar(255) NULL,
 	"open" bool NULL,
 
 	is_deleted bool NOT NULL,

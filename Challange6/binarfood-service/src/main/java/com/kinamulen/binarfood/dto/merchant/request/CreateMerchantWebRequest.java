@@ -10,6 +10,7 @@ import lombok.*;
 @Builder
 public class CreateMerchantWebRequest {
     private String merchantName;
+    private String password;
     private String phoneNumber;
     private String merchantLocation;
     private MerchantType type;

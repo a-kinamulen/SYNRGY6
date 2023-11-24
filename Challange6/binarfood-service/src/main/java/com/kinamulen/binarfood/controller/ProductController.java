@@ -23,7 +23,7 @@ public class ProductController {
     @Autowired
     private MerchantService merchantService;
 
-    @PostMapping
+    @PostMapping("/_create/_merchant-secured")
     public ResponseEntity<ProductWebResponse> create(@RequestHeader("merchant_name") String merchantName,
                                                      @RequestBody ProductWebRequest request){
         log.info("Starting product creation, name: {}, on merchant: {}"
@@ -36,19 +36,19 @@ public class ProductController {
     }
 
     //Only get products from open merchant
-    @GetMapping
+    @GetMapping("/_public")
     public ResponseEntity<List<ProductWebResponse>> getProducts() {
         List<ProductWebResponse> responses = productService.getProducts();
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/merchant/{merchantId}")
+    @GetMapping("/merchant/{merchantId}/_public")
     public ResponseEntity<List<ProductWebResponse>> getProductByMerchant(@PathVariable UUID merchantId) {
         List<ProductWebResponse> responses = productService.getProductByMerchant(merchantId);
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/_public")
     public ResponseEntity<ProductWebResponse> getProduct(@PathVariable UUID id){
         ProductWebResponse response = productService.getProduct(id);
         if (Objects.nonNull(response)) {
@@ -57,7 +57,7 @@ public class ProductController {
         return ResponseEntity.notFound().build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}/_update/_merchant-secured")
     public ResponseEntity<ProductWebResponse> update(@PathVariable UUID id, @RequestBody ProductWebRequest request){
         ProductWebResponse response = productService.update(id, request);
         if (Objects.nonNull(response)) {
@@ -66,7 +66,7 @@ public class ProductController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/_delete/_merchant-secured")
     public ResponseEntity<Boolean> delete(@PathVariable UUID id){
         boolean response = productService.delete(id);
         if (response) {

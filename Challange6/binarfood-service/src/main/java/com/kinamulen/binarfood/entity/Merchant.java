@@ -21,6 +21,7 @@ public class Merchant extends AuditModel {
 
     @Column(length = 30, unique = true) //bisa jadi layer terakhir validasi [bad practice]
     private String merchantName;
+    private String password;
     private Boolean open;
 
     @OneToMany(mappedBy="merchant",fetch = FetchType.EAGER) //mappedBy nya nembak di Product
@@ -31,10 +32,11 @@ public class Merchant extends AuditModel {
 
     @Builder
     public Merchant(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
-                    String merchantName, Boolean open,
+                    String merchantName, String password,  Boolean open,
                     Set<Product> products,MerchantDetail merchantDetail) {
         super(id, isDeleted, createdAt, updatedAt, deletedAt);
         this.merchantName = merchantName;
+        this.password = password;
         this.open = open;
         this.products = products;
         this.merchantDetail = merchantDetail;

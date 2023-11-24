@@ -1,5 +1,8 @@
 package com.kinamulen.binarfood.service;
 
+import com.kinamulen.binarfood.adapter.NotificationServiceAdapter;
+import com.kinamulen.binarfood.adapter.request.NotificationWebRequest;
+import com.kinamulen.binarfood.adapter.response.NotificationWebResponse;
 import com.kinamulen.binarfood.dto.order.request.OrderDetailWebRequest;
 import com.kinamulen.binarfood.dto.order.request.OrderWebRequest;
 import com.kinamulen.binarfood.dto.order.response.OrderDetailWebResponse;
@@ -9,9 +12,7 @@ import com.kinamulen.binarfood.repository.OrderDetailRepository;
 import com.kinamulen.binarfood.repository.OrderRepository;
 import com.kinamulen.binarfood.repository.ProductRepository;
 import com.kinamulen.binarfood.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,14 +32,19 @@ public class OrderService {
     private UserRepository userRepository;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private InvoiceService invoiceService;
+    @Autowired
+    private NotificationServiceAdapter notificationServiceAdapter;
 
-    public OrderWebResponse create(String username, String password, OrderWebRequest request) {
-        Optional<User> user = userRepository.findByUsernameAndPassword(username,password);
+    public OrderWebResponse create(OrderWebRequest request, String idFromToken) {
+        Optional<User> user = userRepository.findById(UUID.fromString(idFromToken));
         List<OrderDetail> orderDetails = new ArrayList<>();
 
-        if (user.isPresent()) {
+        if (user.isPresent() && user.get().getIsVerified()) {
             //loop List<OrderDetailWebRequest>
-            log.info("initiating order creation for username: {}, id: {}", username, user.get().getId());
+            log.info("initiating order creation for username: {}, id: {}",
+                    user.get().getUsername(), user.get().getId());
             Order order = Order.builder()
                     .orderTime(LocalDateTime.now())
                     .destinationAddress(request.getDestinationAddress())
@@ -66,7 +72,7 @@ public class OrderService {
             log.info("Order created with id {}", order.getId());
             return toWebResponse(order);
         } else {
-            log.error("Username {} and password mismatched. Order creation canceled", username);
+            log.error("User not found OR not verified for id: {}", idFromToken);
             return null;
         }
     }
@@ -78,11 +84,11 @@ public class OrderService {
         } else return null;
     }
 
-    public OrderWebResponse pay(String username, String password, UUID id) {
-        Optional<User> user = userRepository.findByUsernameAndPassword(username,password);
+    public OrderWebResponse pay(UUID id, String idFromToken) {
+        Optional<User> user = userRepository.findById(UUID.fromString(idFromToken));
         Optional<Order> order = orderRepository.findById(id);
         if (user.isPresent() && order.isPresent()) {
-            log.info("initiating order payment for username: {}, order id: {}", username, id);
+            log.info("initiating order payment for username: {}, order id: {}", user.get().getUsername(), id);
             Wallet userWallet = user.get().getUserDetail().getWallet();
             Double totalCost = order.get().getOrdersDetails().stream().mapToDouble(OrderDetail::getTotalPrice).sum();
             Boolean isComplete = userWallet.getBalance() >= totalCost;
@@ -113,6 +119,15 @@ public class OrderService {
                 });
 
                 orderRepository.save(order.get());
+
+                //Send an email with invoice attached to user email
+                byte[] reportContent = invoiceService.generateInvoice(id);
+                String pdfInString = Base64.getEncoder().encodeToString(reportContent);
+                NotificationWebResponse response = notificationServiceAdapter.sendEmail(NotificationWebRequest.builder()
+                        .pdfByte(pdfInString)
+                        .receiverEmail(order.get().getUser().getUserDetail().getEmailAddress())
+                        .build());
+                log.info("Success. " + response);
             }
             log.info("Order payment with id {} status completed: {}", order.get().getId(), order.get().getCompleted());
             return toWebResponse(order.get());

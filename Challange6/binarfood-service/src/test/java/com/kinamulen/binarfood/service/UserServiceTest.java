@@ -8,7 +8,7 @@ import com.kinamulen.binarfood.dto.user.response.UserWebResponse;
 import com.kinamulen.binarfood.entity.User;
 import com.kinamulen.binarfood.entity.UserDetail;
 import com.kinamulen.binarfood.entity.Wallet;
-import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.UserDetailRepository;
 import com.kinamulen.binarfood.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
@@ -70,7 +70,7 @@ class UserServiceTest {
         Wallet wallet = Wallet.builder()
                 .id(UUID.randomUUID())
                 .balance(0.0)
-                .type(WalletType.USER)
+                .type(UserType.USER)
                 .build();
         UserDetail userDetail = UserDetail.builder()
                 .phoneNumber("08888888888")

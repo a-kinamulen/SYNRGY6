@@ -11,24 +11,23 @@ import com.kinamulen.binarfood.dto.wallet.response.WalletWebResponse;
 import com.kinamulen.binarfood.entity.Merchant;
 import com.kinamulen.binarfood.entity.MerchantDetail;
 import com.kinamulen.binarfood.entity.Wallet;
-import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.MerchantDetailRepository;
 import com.kinamulen.binarfood.repository.MerchantRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -42,16 +41,19 @@ public class MerchantService {
     private WalletRepository walletRepository;
     @Autowired
     private SecurityServiceAdapter securityServiceAdapter;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public MerchantWebResponse create(CreateMerchantWebRequest request) {
         Merchant merchant = Merchant.builder()
                 .merchantName(request.getMerchantName())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .open(true)
                 .build();
 
         Wallet wallet = Wallet.builder()
                 .balance(0.0)
-                .type(WalletType.MERCHANT)
+                .type(UserType.MERCHANT)
                 .build();
 
         MerchantDetail merchantDetail = MerchantDetail.builder()
@@ -68,7 +70,9 @@ public class MerchantService {
         //REST call to security service
         CreateUserCredentialWebResponse response = securityServiceAdapter.addNewUser(CreateUserCredentialWebRequest.builder()
                 .username(merchant.getMerchantName())
+                .password(merchant.getPassword())
                 .binarfoodId(merchant.getId())
+                .type(UserType.MERCHANT)
                 .build());
         log.info("Merchant CREATED: id {}, merchantDetailId {}, walletId {}, token {}"
                 , merchant.getId(), merchantDetail.getId(), wallet.getId(), response.getToken());

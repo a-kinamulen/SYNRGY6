@@ -1,6 +1,6 @@
 package com.kinamulen.binarfood.enums;
 
-public enum WalletType {
+public enum UserType {
     USER,
     MERCHANT
 }

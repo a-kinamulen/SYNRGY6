@@ -9,7 +9,7 @@ import com.kinamulen.binarfood.entity.Merchant;
 import com.kinamulen.binarfood.entity.MerchantDetail;
 import com.kinamulen.binarfood.entity.Wallet;
 import com.kinamulen.binarfood.enums.MerchantType;
-import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.MerchantDetailRepository;
 import com.kinamulen.binarfood.repository.MerchantRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
@@ -73,7 +73,7 @@ class MerchantServiceTest {
         Wallet wallet = Wallet.builder()
                 .id(UUID.randomUUID())
                 .balance(0.0)
-                .type(WalletType.MERCHANT)
+                .type(UserType.MERCHANT)
                 .build();
         MerchantDetail merchantDetail = MerchantDetail.builder()
                 .phoneNumber("08888888888")

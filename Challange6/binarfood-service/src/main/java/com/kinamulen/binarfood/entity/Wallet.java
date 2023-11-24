@@ -1,6 +1,6 @@
 package com.kinamulen.binarfood.entity;
 
-import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -21,7 +21,7 @@ public class Wallet extends AuditModel{
 
     private Double balance;
     @Enumerated(EnumType.STRING)
-    private WalletType type;
+    private UserType type;
 
     @OneToOne(mappedBy = "wallet", cascade = CascadeType.ALL)
     private UserDetail userDetail;
@@ -31,7 +31,7 @@ public class Wallet extends AuditModel{
 
     @Builder
     public Wallet(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
-                  Double balance, WalletType type,
+                  Double balance, UserType type,
                   UserDetail userDetail, MerchantDetail merchantDetail) {
         super(id, isDeleted, createdAt, updatedAt, deletedAt);
         this.balance = balance;

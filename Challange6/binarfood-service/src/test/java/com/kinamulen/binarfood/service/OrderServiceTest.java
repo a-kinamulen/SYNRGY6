@@ -5,7 +5,7 @@ import com.kinamulen.binarfood.dto.order.request.OrderDetailWebRequest;
 import com.kinamulen.binarfood.dto.order.request.OrderWebRequest;
 import com.kinamulen.binarfood.dto.order.response.OrderWebResponse;
 import com.kinamulen.binarfood.entity.*;
-import com.kinamulen.binarfood.enums.WalletType;
+import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.OrderDetailRepository;
 import com.kinamulen.binarfood.repository.OrderRepository;
 import com.kinamulen.binarfood.repository.ProductRepository;
@@ -94,13 +94,13 @@ class OrderServiceTest {
         //Data prep ends
 
         //mock data starts
-        given(userRepository.findByUsernameAndPassword(any(),any())).willReturn(optUser);
+        given(userRepository.findById(any(UUID.class))).willReturn(optUser);
         given(productRepository.findById(any(UUID.class))).willReturn(optProduct);
         given(orderRepository.save(any(Order.class))).willReturn(order);
         //mock data ends
 
         OrderWebResponse orderWebResponse = orderService
-                .create("username","password",orderWebRequest);
+                .create(orderWebRequest, userId.toString());
         Assertions.assertNotNull(orderWebResponse);
     }
 
@@ -108,11 +108,11 @@ class OrderServiceTest {
     @Test
     void createOrder_failed() {
         //mock data starts
-        given(userRepository.findByUsernameAndPassword(any(),any())).willReturn(Optional.empty());
+        given(userRepository.findById(any(UUID.class))).willReturn(Optional.empty());
         //mock data ends
 
         OrderWebResponse orderWebResponse = orderService
-                .create("username","password",OrderWebRequest.builder().build());
+                .create(OrderWebRequest.builder().build(), UUID.randomUUID().toString());
         Assertions.assertNull(orderWebResponse);
     }
 
@@ -123,7 +123,7 @@ class OrderServiceTest {
         Wallet wallet = Wallet.builder()
                 .id(UUID.randomUUID())
                 .balance(10000000000.0)
-                .type(WalletType.USER)
+                .type(UserType.USER)
                 .build();
         UserDetail userDetail = UserDetail.builder()
                 .phoneNumber("08888888888")
@@ -163,12 +163,12 @@ class OrderServiceTest {
         //Data prep ends
 
         //mock data starts
-        given(userRepository.findByUsernameAndPassword(any(),any())).willReturn(optUser);
+        given(userRepository.findById(any(UUID.class))).willReturn(optUser);
         given(orderRepository.findById(any(UUID.class))).willReturn(optOrder);
         //mock data ends
 
         OrderWebResponse orderWebResponse = orderService
-                .pay("username","password", orderId);
+                .pay(orderId, userId.toString());
         Assertions.assertNotNull(orderWebResponse);
         Assertions.assertTrue(orderWebResponse.getCompleted());
     }
@@ -180,7 +180,7 @@ class OrderServiceTest {
         Wallet wallet = Wallet.builder()
                 .id(UUID.randomUUID())
                 .balance(10.0)
-                .type(WalletType.USER)
+                .type(UserType.USER)
                 .build();
         UserDetail userDetail = UserDetail.builder()
                 .phoneNumber("08888888888")
@@ -220,12 +220,12 @@ class OrderServiceTest {
         //Data prep ends
 
         //mock data starts
-        given(userRepository.findByUsernameAndPassword(any(),any())).willReturn(optUser);
+        given(userRepository.findById(any(UUID.class))).willReturn(optUser);
         given(orderRepository.findById(any(UUID.class))).willReturn(optOrder);
         //mock data ends
 
         OrderWebResponse orderWebResponse = orderService
-                .pay("username","password", orderId);
+                .pay(orderId, userId.toString());
         Assertions.assertNotNull(orderWebResponse);
         Assertions.assertFalse(orderWebResponse.getCompleted());
     }
@@ -257,12 +257,12 @@ class OrderServiceTest {
         //Data prep ends
 
         //mock data starts
-        given(userRepository.findByUsernameAndPassword(any(),any())).willReturn(Optional.empty());
+        given(userRepository.findById(any(UUID.class))).willReturn(Optional.empty());
         given(orderRepository.findById(any(UUID.class))).willReturn(optOrder);
         //mock data ends
 
         OrderWebResponse orderWebResponse = orderService
-                .pay("username","password", orderId);
+                .pay(orderId, UUID.randomUUID().toString());
         Assertions.assertNull(orderWebResponse);
     }
 }

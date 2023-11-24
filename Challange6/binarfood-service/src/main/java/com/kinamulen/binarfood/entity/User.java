@@ -22,6 +22,8 @@ public class User extends AuditModel{
     @Column(length = 20, nullable = false, unique = true)
     private String username;
     private String password;
+    private Boolean isVerified;
+    private String otp;
 
     @OneToMany(mappedBy="user") //mappedBy nya nembak di Order
     private Set<Order> orders;
@@ -31,11 +33,13 @@ public class User extends AuditModel{
 
     @Builder
     public User(UUID id, boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt,
-                String username, String password,
+                String username, String password, Boolean isVerified, String otp,
                 Set<Order> orders, UserDetail userDetail) {
         super(id, isDeleted, createdAt, updatedAt, deletedAt);
         this.username = username;
         this.password = password;
+        this.isVerified = isVerified;
+        this.otp = otp;
         this.orders = orders;
         this.userDetail = userDetail;
     }

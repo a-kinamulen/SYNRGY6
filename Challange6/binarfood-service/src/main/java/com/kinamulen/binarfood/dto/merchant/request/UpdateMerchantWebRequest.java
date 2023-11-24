@@ -10,6 +10,7 @@ import lombok.*;
 @Builder
 public class UpdateMerchantWebRequest {
     private String merchantName;
+    private String password;
     private Boolean open;
     private String phoneNumber;
     private String merchantLocation;

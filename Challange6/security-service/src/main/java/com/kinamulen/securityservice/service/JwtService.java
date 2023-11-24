@@ -1,5 +1,6 @@
 package com.kinamulen.securityservice.service;
 
+import com.kinamulen.securityservice.enums.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -14,6 +15,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -33,8 +35,10 @@ public class JwtService {
     }
 
 
-    public String generateToken(String username) {
+    public String generateToken(String username, UUID binarfoodId, UserType type) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("binarfoodId", binarfoodId.toString());
+        claims.put("type", type.toString());
         return createToken(claims, username);
     }
 
