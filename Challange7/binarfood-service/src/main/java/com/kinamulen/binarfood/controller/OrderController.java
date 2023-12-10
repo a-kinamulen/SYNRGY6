@@ -41,7 +41,6 @@ public class OrderController {
         log.info("Starting create order for user {}", idFromToken);
         OrderWebResponse response = orderService.create(request, idFromToken);
         if (Objects.nonNull(response)) {
-
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.notFound().build();
@@ -50,12 +49,12 @@ public class OrderController {
     //getOrderbyId
     @GetMapping(value = "/{id}/_user-secured", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OrderWebResponse> getOrder(
-            @PathVariable UUID id,
+            @PathVariable UUID idFromPath,
             @RequestHeader(value = "userId") String idFromToken) {
-        if (Boolean.FALSE.equals(securityUtil.authorizeOrderToUserId(id, idFromToken))){
+        if (Boolean.FALSE.equals(securityUtil.authorizeOrderToUserId(idFromPath, idFromToken))){
             return ResponseEntity.badRequest().build();
         }
-        OrderWebResponse response = orderService.getOrder(id);
+        OrderWebResponse response = orderService.getOrder(idFromPath);
         if (Objects.nonNull(response)) {
             return ResponseEntity.ok(response);
         }

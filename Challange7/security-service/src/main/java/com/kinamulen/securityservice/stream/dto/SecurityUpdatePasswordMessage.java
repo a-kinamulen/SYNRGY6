@@ -1,4 +1,4 @@
-package com.kinamulen.binarfood.adapter.request;
+package com.kinamulen.securityservice.stream.dto;
 
 import lombok.*;
 
@@ -9,7 +9,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdatePasswordWebRequest {
+public class SecurityUpdatePasswordMessage {
     private UUID binarfoodId;
     private String newPassword;
 }

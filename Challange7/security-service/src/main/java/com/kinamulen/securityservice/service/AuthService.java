@@ -7,6 +7,7 @@ import com.kinamulen.securityservice.dto.user.CreateUserCredentialWebRequest;
 import com.kinamulen.securityservice.dto.user.CreateUserCredentialWebResponse;
 import com.kinamulen.securityservice.entity.UserCredential;
 import com.kinamulen.securityservice.repository.UserCredentialRepository;
+import com.kinamulen.securityservice.stream.dto.SecurityUpdatePasswordMessage;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,11 +53,21 @@ public class AuthService {
         Optional<UserCredential> userCredential = repository.findByBinarfoodId(request.getBinarfoodId());
         if (userCredential.isPresent()) {
             userCredential.get().setPassword(request.getNewPassword());
+            userCredentialRepository.save(userCredential.get());
             return UpdatePasswordWebResponse.builder().response("Password updated").build();
         }
         return null;
     }
 
+    public UpdatePasswordWebResponse updatePassword(SecurityUpdatePasswordMessage message) {
+        Optional<UserCredential> userCredential = repository.findByBinarfoodId(message.getBinarfoodId());
+        if (userCredential.isPresent()) {
+            userCredential.get().setPassword(message.getNewPassword());
+            userCredentialRepository.save(userCredential.get());
+            return UpdatePasswordWebResponse.builder().response("Password updated").build();
+        }
+        return null;
+    }
 
     public String generateToken(AuthRequest authRequest) {
         try {

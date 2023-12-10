@@ -3,6 +3,7 @@ package com.kinamulen.notificationservice.service;
 import com.kinamulen.notificationservice.dto.NotificationOtpWebRequest;
 import com.kinamulen.notificationservice.dto.NotificationWebRequest;
 import com.kinamulen.notificationservice.dto.NotificationWebResponse;
+import com.kinamulen.notificationservice.stream.dto.NotificationOtpMessage;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.mail.*;
@@ -71,6 +72,28 @@ public class NotificationService {
 
             MimeBodyPart textBodyPart = new MimeBodyPart();
             textBodyPart.setText("This is your OTP: " + request.getOtp());
+
+            //construct the mime multi part
+            MimeMultipart mimeMultipart = new MimeMultipart();
+            mimeMultipart.addBodyPart(textBodyPart);
+            mimeMessage.setContent(mimeMultipart);
+        };
+        try {
+            mailSender.send(preparator);
+        } catch (MailException ex) {
+            // simply log it and go on...
+            System.err.println(ex.getMessage());
+        }
+    }
+
+    public void sendOtpViaEmail(NotificationOtpMessage message) {
+        MimeMessagePreparator preparator = mimeMessage -> {
+            mimeMessage.setRecipient(Message.RecipientType.TO, new InternetAddress(message.getReceiverEmail()));
+            mimeMessage.setFrom(new InternetAddress("a.kinamulen@gmail.com")); //admin email
+            mimeMessage.setSubject("Your registration OTP for BinarFood!");
+
+            MimeBodyPart textBodyPart = new MimeBodyPart();
+            textBodyPart.setText("This is your OTP: " + message.getOtp());
 
             //construct the mime multi part
             MimeMultipart mimeMultipart = new MimeMultipart();

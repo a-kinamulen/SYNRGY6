@@ -1,10 +1,12 @@
 package com.kinamulen.binarfood.util;
 
 import com.kinamulen.binarfood.entity.Order;
+import com.kinamulen.binarfood.entity.Product;
 import com.kinamulen.binarfood.entity.User;
 import com.kinamulen.binarfood.entity.Wallet;
 import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.OrderRepository;
+import com.kinamulen.binarfood.repository.ProductRepository;
 import com.kinamulen.binarfood.repository.UserRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,8 @@ public class SecurityUtil {
     private OrderRepository orderRepository;
     @Autowired
     private WalletRepository walletRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     public Boolean authorizeId(UUID id, String idFromToken) {
         boolean authorized = id.equals(UUID.fromString(idFromToken));
@@ -40,6 +44,18 @@ public class SecurityUtil {
         UUID userId = order.get().getUser().getId();
         boolean authorized = userId.equals(UUID.fromString(userIdFromToken));
         log.info("Order to User is authorized: {}", authorized);
+        return authorized;
+    }
+
+    public Boolean authorizeProductToMerchantId(UUID productIdFromPath, String merchantIdFromToken) {
+        Optional<Product> product = productRepository.findById(productIdFromPath);
+        if (product.isEmpty()) {
+            log.info("Product to Merchant is authorized: {}", false);
+            return false;
+        }
+        UUID merchantId = product.get().getMerchant().getId();
+        boolean authorized = merchantId.equals(UUID.fromString(merchantIdFromToken));
+        log.info("Product to Merchant is authorized: {}", authorized);
         return authorized;
     }
 

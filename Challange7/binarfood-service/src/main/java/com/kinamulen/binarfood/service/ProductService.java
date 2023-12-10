@@ -26,8 +26,8 @@ public class ProductService {
     @Autowired
     private MerchantRepository merchantRepository;
 
-    public ProductWebResponse create(String merchantName, ProductWebRequest request) {
-        Optional<Merchant> merchant = merchantRepository.findByMerchantName(merchantName);
+    public ProductWebResponse create(ProductWebRequest request, String idFromToken) {
+        Optional<Merchant> merchant = merchantRepository.findById(UUID.fromString(idFromToken));
         if (merchant.isPresent()) {
             Product product = Product.builder()
                     .productName(request.getProductName())
@@ -36,10 +36,10 @@ public class ProductService {
                     .build();
             product = productRepository.save(product);
             log.info("Product {} on merchant {} CREATED with id {}"
-                    , product.getProductName(), merchantName, product.getId());
+                    , product.getProductName(), merchant.get().getMerchantName(), product.getId());
             return toWebResponse(product);
         } else {
-            log.info("Cant find merchant: {}, FAILED to create product", merchantName);
+            log.info("Cant find merchant with id: {}, FAILED to create product", idFromToken);
             return null;
         }
     }

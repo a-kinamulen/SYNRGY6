@@ -1,8 +1,7 @@
 package com.kinamulen.binarfood.adapter;
 
 import com.kinamulen.binarfood.adapter.request.CreateUserCredentialWebRequest;
-import com.kinamulen.binarfood.adapter.request.NotificationWebRequest;
-import com.kinamulen.binarfood.adapter.request.UpdatePasswordWebRequest;
+import com.kinamulen.binarfood.adapter.request.SecurityUpdatePasswordWebRequest;
 import com.kinamulen.binarfood.adapter.response.CreateUserCredentialWebResponse;
 import com.kinamulen.binarfood.adapter.response.UpdatePasswordWebResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +26,11 @@ public class SecurityServiceAdapter {
         return response;
     }
 
-    public UpdatePasswordWebResponse updatePassword(UpdatePasswordWebRequest request) {
+    public UpdatePasswordWebResponse updatePassword(SecurityUpdatePasswordWebRequest request) {
         String url = "http://SECURITY-SERVICE/auth/update-password";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<UpdatePasswordWebRequest> requestEntity = new HttpEntity<>(request,headers);
+        HttpEntity<SecurityUpdatePasswordWebRequest> requestEntity = new HttpEntity<>(request,headers);
         UpdatePasswordWebResponse response = restTemplate.postForObject(url, requestEntity, UpdatePasswordWebResponse.class);
         return response;
     }

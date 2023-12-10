@@ -67,6 +67,7 @@ public class MerchantService {
         merchant.setMerchantDetail(merchantDetail);
         wallet.setMerchantDetail(merchantDetail);
         merchantDetail = merchantDetailRepository.save(merchantDetail);
+
         //REST call to security service
         CreateUserCredentialWebResponse response = securityServiceAdapter.addNewUser(CreateUserCredentialWebRequest.builder()
                 .username(merchant.getMerchantName())

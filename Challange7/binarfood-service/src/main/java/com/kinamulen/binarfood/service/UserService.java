@@ -3,11 +3,7 @@ package com.kinamulen.binarfood.service;
 import com.kinamulen.binarfood.adapter.NotificationServiceAdapter;
 import com.kinamulen.binarfood.adapter.SecurityServiceAdapter;
 import com.kinamulen.binarfood.adapter.request.CreateUserCredentialWebRequest;
-import com.kinamulen.binarfood.adapter.request.NotificationOtpWebRequest;
-import com.kinamulen.binarfood.adapter.request.UpdatePasswordWebRequest;
 import com.kinamulen.binarfood.adapter.response.CreateUserCredentialWebResponse;
-import com.kinamulen.binarfood.adapter.response.NotificationWebResponse;
-import com.kinamulen.binarfood.adapter.response.UpdatePasswordWebResponse;
 import com.kinamulen.binarfood.dto.order.response.OrderWebResponse;
 import com.kinamulen.binarfood.dto.user.request.ForgetPasswordWebRequest;
 import com.kinamulen.binarfood.dto.user.request.RegisterUserWebRequest;
@@ -22,6 +18,9 @@ import com.kinamulen.binarfood.enums.UserType;
 import com.kinamulen.binarfood.repository.UserDetailRepository;
 import com.kinamulen.binarfood.repository.UserRepository;
 import com.kinamulen.binarfood.repository.WalletRepository;
+import com.kinamulen.binarfood.stream.MessageProducer;
+import com.kinamulen.binarfood.stream.dto.NotificationOtpMessage;
+import com.kinamulen.binarfood.stream.dto.SecurityUpdatePasswordMessage;
 import com.kinamulen.binarfood.util.SecurityUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +51,8 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private SecurityUtil securityUtil;
+    @Autowired
+    private MessageProducer messageProducer;
 
     public UserWebResponse register(RegisterUserWebRequest request) {
         User user = User.builder()
@@ -84,8 +85,15 @@ public class UserService {
                         .binarfoodId(user.getId())
                         .type(UserType.USER)
                 .build());
+
         //REST call to notification service
-        NotificationWebResponse responseNotification = notificationServiceAdapter.sendOtp(NotificationOtpWebRequest.builder()
+//        NotificationWebResponse responseNotification = notificationServiceAdapter.sendOtp(NotificationOtpWebRequest.builder()
+//                        .receiverEmail(userDetail.getEmailAddress())
+//                        .otp(user.getOtp())
+//                        .build());
+
+        //KAFKA PUBLISH to notification service
+        messageProducer.sendMessageOtp(NotificationOtpMessage.builder()
                         .receiverEmail(userDetail.getEmailAddress())
                         .otp(user.getOtp())
                         .build());
@@ -103,13 +111,19 @@ public class UserService {
                 user.get().setOtp(null);
                 User updatedUser = userRepository.save(user.get());
 
-                //Save ke service security
-                UpdatePasswordWebResponse response = securityServiceAdapter.updatePassword(UpdatePasswordWebRequest.builder()
-                        .binarfoodId(request.getId())
-                        .newPassword(user.get().getPassword())
-                        .build());
+                //REST Call - Save ke service security
+//                UpdatePasswordWebResponse response = securityServiceAdapter.updatePassword(SecurityUpdatePasswordWebRequest.builder()
+//                        .binarfoodId(request.getId())
+//                        .newPassword(user.get().getPassword())
+//                        .build());
+//                log.info(response.getResponse());
 
-                log.info(response.getResponse());
+                ////KAFKA PUBLISH to security service
+                messageProducer.sendMessageUpdatePassword(SecurityUpdatePasswordMessage.builder()
+                                .binarfoodId(request.getId())
+                                .newPassword(user.get().getPassword())
+                                .build());
+
                 return toWebResponse(updatedUser, updatedUser.getUserDetail());
             }
             log.error("Verification FAILED, OTP mismatch. userId: {}", request.getId());
@@ -147,10 +161,17 @@ public class UserService {
             log.info("OTP saved on database");
 
             //REST call to notification service
-            NotificationWebResponse responseNotification = notificationServiceAdapter.sendOtp(NotificationOtpWebRequest.builder()
+//            NotificationWebResponse responseNotification = notificationServiceAdapter.sendOtp(NotificationOtpWebRequest.builder()
+//                    .receiverEmail(user.get().getUserDetail().getEmailAddress())
+//                    .otp(user.get().getOtp())
+//                    .build());
+
+            //KAFKA PUBLISH to notification service
+            messageProducer.sendMessageOtp(NotificationOtpMessage.builder()
                     .receiverEmail(user.get().getUserDetail().getEmailAddress())
                     .otp(user.get().getOtp())
                     .build());
+
             log.info("OTP sent to email");
             return ForgetPasswordWebResponse.builder()
                     .message("OTP sent")
